@@ -32,11 +32,11 @@ def writeGen(currentGen, genNumber):
     return
 
 def main():
-    currentGen = readGen(0)
+    currentGen = readGen("../IO/GoldenGen/gen", 0)
     for i in range(1, NUM_GEN):
         currentGen = updateGen(currentGen)
         writeGen(currentGen, i)
-        #updateAnimation()
+    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../Animations/GoldenAnimation.mp4")
 
 if __name__ == "__main__":
     main()
