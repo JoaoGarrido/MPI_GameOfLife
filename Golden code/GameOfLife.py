@@ -20,7 +20,7 @@ def updateGen(currentGen):
             #create next generation 
             if (currentGen[y, x]) and (number_of_neighboors_alive > 1) and (number_of_neighboors_alive < 4) or (not currentGen[y, x]) and (number_of_neighboors_alive == 3):
                 nextGen[y, x] = 1
-    return nextGen[1:ySize+1, 1:xSize+1]
+    return nextGen
 
 def writeGen(currentGen, genNumber):
     f = open("../IO/GoldenGen/gen" + str(genNumber) + ".dat", "w")
