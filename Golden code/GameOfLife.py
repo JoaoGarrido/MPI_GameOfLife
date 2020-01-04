@@ -1,13 +1,13 @@
 import numpy as np
 from GameOfLifeAnimation import *
 
-NUM_GEN = 3
+NUM_GEN = 101
 
 def updateGen(currentGen):
     ySize, xSize = currentGen.shape
     nextGen = np.zeros((ySize, xSize), dtype = np.uint8)
     #iterate over every cell
-    #NOTE: CHECK OUTPUT
+    #NOTE: OUTPUT CHECKED. Seems correct!
     for y in range(ySize):
         for x in range(xSize):
             number_of_neighboors_alive = 0        
@@ -17,6 +17,8 @@ def updateGen(currentGen):
                     if x_aux >= 0 and y_aux >= 0:
                         if x_aux < xSize and y_aux < ySize:
                             number_of_neighboors_alive += currentGen[y_aux, x_aux]
+            if currentGen[y, x]:
+                number_of_neighboors_alive -= 1
             #create next generation 
             if (currentGen[y, x]) and (number_of_neighboors_alive > 1) and (number_of_neighboors_alive < 4) or (not currentGen[y, x]) and (number_of_neighboors_alive == 3):
                 nextGen[y, x] = 1

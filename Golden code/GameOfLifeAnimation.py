@@ -9,8 +9,6 @@ def readGen(genNumber):
     for y in range(readGen.ySize):
         line = f.readline()
         readGen.currentGen[y, :] = [np.uint8(returnValues) for returnValues in line.split()]
-
-    print(readGen.currentGen)
     f.close()
     return readGen.currentGen
 
