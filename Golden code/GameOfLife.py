@@ -36,7 +36,7 @@ def main():
     for i in range(1, NUM_GEN):
         currentGen = updateGen(currentGen)
         writeGen(currentGen, i)
-    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../Animations/GoldenAnimation.mp4")
+    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../IO/Animations/GoldenAnimation.mp4")
 
 if __name__ == "__main__":
     main()

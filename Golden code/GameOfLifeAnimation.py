@@ -19,12 +19,13 @@ def plotAnimation(path, n, savePath):
     for i in range(n):
         im = ax.imshow(readGen(path, i), interpolation='nearest')
         ims.append([im])
-    ani = animation.ArtistAnimation(fig, ims, interval = 200, repeat_delay = 1000)
-    #ani.save(savePath)
+    ani = animation.ArtistAnimation(fig, ims, interval = 400, repeat_delay = 1000)
+    ani.save(savePath, fps=60, writer='ffmpeg') #NOTE: Try to make it better
     plt.show()
 
 def main():
-    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../Animations/")
+    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../IO/Animations/ConwayGameOfLife_Golden.mp4")
+    #plotAnimation("../IO/MPI/gen", NUM_GEN, "../IO/Animations/ConwayGameOfLife_MPI.mp4")
 
 if __name__ == "__main__":
     main()
