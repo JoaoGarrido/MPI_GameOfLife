@@ -17,8 +17,7 @@ def updateGen(currentGen):
                     if x_aux >= 0 and y_aux >= 0:
                         if x_aux < xSize and y_aux < ySize:
                             number_of_neighboors_alive += currentGen[y_aux, x_aux]
-            if currentGen[y, x]:
-                number_of_neighboors_alive -= 1
+            number_of_neighboors_alive -= currentGen[y, x]
             #create next generation 
             if (currentGen[y, x]) and (number_of_neighboors_alive > 1) and (number_of_neighboors_alive < 4) or (not currentGen[y, x]) and (number_of_neighboors_alive == 3):
                 nextGen[y, x] = 1
