@@ -36,7 +36,7 @@ int test_writeGen(){
     //Use readGen to test
     if(readGen("../IO/MPI/gen0.dat", &currentGen, &info)) 
         return INCORRECT_OUTPUT;
-    if(writeGen("../IO/MPI/testWrite.dat", currentGen, info))
+    if(writeGen("../IO/MPI/TEST", currentGen, info, 0))
         return INCORRECT_OUTPUT;
     return CORRECT_OUTPUT;
 }

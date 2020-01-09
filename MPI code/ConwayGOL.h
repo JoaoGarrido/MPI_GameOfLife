@@ -27,15 +27,15 @@ typedef struct{
     int w_size;
 }ConwayGameOfLifeInfo;
 
-void gen0Propagation(int process_rank, int system_size, int **buf, int *nRowsOfProcess, ConwayGameOfLifeInfo currentGenInfo);
+void gen0Propagation(int process_rank, int system_size, int **buf, int *nRowsOfProcess, ConwayGameOfLifeInfo info);
 
-void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo currentGenInfo);
+void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo info);
 
-void sendRows(int process_rank, int system_size, int row_for_process, int* currentRow, ConwayGameOfLifeInfo currentGenInfo);
+void sendRows(int process_rank, int system_size, int row_for_process, int* currentRow, ConwayGameOfLifeInfo info);
 
 int readGen(char *filename, int **array, ConwayGameOfLifeInfo* info);
 
-int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info);
+int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info, int genIterator);
 
 int calculateNumberOfNeighbours(int **MooreNeighbourhoodArray);
 

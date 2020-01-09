@@ -54,7 +54,7 @@ void gen0Propagation(int process_rank, int system_size, int **buf, int *nRowsOfP
     }
 }
 
-void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo currentGenInfo){
+void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo info){
     int process_recv[2];
     /*
         [0] -> receive from process responsible from row above
@@ -72,7 +72,7 @@ void receiveRows(int process_rank, int system_size, int row_for_process, int* ab
     if(ROW){ //If not row 0, receive from row above
         MPI_Recv(
             aboveRowBuf,
-            currentGenInfo.w_size,
+            info.w_size,
             MPI_INT,
             process_recv[0], 
             getRow(process_recv[0], row_for_process),
@@ -81,10 +81,10 @@ void receiveRows(int process_rank, int system_size, int row_for_process, int* ab
         );
     }
     //DOWN
-    if(ROW >= (currentGenInfo.h_size - 1) ){ //If not the last row, receive from row below
+    if(ROW >= (info.h_size - 1) ){ //If not the last row, receive from row below
         MPI_Recv(
             belowRowBuf,
-            currentGenInfo.w_size,
+            info.w_size,
             MPI_INT,
             process_recv[1], 
             getRow(process_recv[1], row_for_process),
@@ -94,7 +94,7 @@ void receiveRows(int process_rank, int system_size, int row_for_process, int* ab
     }
 }
 
-void sendRows(int process_rank, int system_size, int row_for_process, int* currentRow, ConwayGameOfLifeInfo currentGenInfo){
+void sendRows(int process_rank, int system_size, int row_for_process, int* currentRow, ConwayGameOfLifeInfo info){
     int process_send[2];
     /*
         [0] -> send to process responsible for row above
@@ -112,7 +112,7 @@ void sendRows(int process_rank, int system_size, int row_for_process, int* curre
     if(ROW){
         MPI_Send(
             currentRow,
-            currentGenInfo.w_size,
+            info.w_size,
             MPI_INT,
             process_send[0], 
             ROW, 
@@ -120,10 +120,10 @@ void sendRows(int process_rank, int system_size, int row_for_process, int* curre
         );
     }
     //BELOW
-    if(ROW >= (currentGenInfo.h_size - 1) ){ //If not the last row, sends to next process
+    if(ROW >= (info.h_size - 1) ){ //If not the last row, sends to next process
         MPI_Send(
             currentRow,
-            currentGenInfo.w_size,
+            info.w_size,
             MPI_INT,
             process_send[1],
             ROW,
@@ -163,11 +163,15 @@ int readGen(char *filename, int **array, ConwayGameOfLifeInfo* info){
     return 0;
 }
 
-int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info){
+int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info, int genIterator){
     char writeBuf[1024], tokenBuf[10];
     int bufLenght = sizeof(writeBuf);
     //open file
-    FILE *f = fopen(filename, "w");
+    strcpy(writeBuf, filename);
+    sprintf(tokenBuf, "%d.dat", genIterator);
+    strcat(writeBuf, tokenBuf);
+    FILE *f = fopen(writeBuf, "w");
+    memset(writeBuf, 0, bufLenght);
     //write file
      for(int i = 0; i < info.h_size; i++){
         memset(writeBuf, 0, bufLenght);
