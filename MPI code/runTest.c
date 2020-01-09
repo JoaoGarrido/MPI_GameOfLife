@@ -1,3 +1,6 @@
+#include "ConwayGOL.h"
+
+#define VISUAL_CHECK 0
 
 #define INCORRECT_OUTPUT 1
 
@@ -8,10 +11,33 @@ int test_calculateMooreNeighbourdhood(){
 }
 
 int test_readGen(){
+    int *currentGen;
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN};
+    if(readGen("../IO/MPI/gen0.dat", &currentGen, &info)) 
+        return INCORRECT_OUTPUT;
+    if(info.h_size != 17 || info.w_size != 38)  
+        return INCORRECT_OUTPUT;
+    //VisualCheck
+    #if VISUAL_CHECK == 1
+    for(int i = 0; i < info.h_size; i++){
+        for(int j = 0; j < info.w_size; j++){
+            printf("%d  ", currentGen[getCurrentGenPosition(i, j)]);
+        }
+        printf("\n");
+    }
+    #endif
+    free(currentGen);
     return CORRECT_OUTPUT;
 }
 
 int test_writeGen(){
+    int *currentGen;
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN};
+    //Use readGen to test
+    if(readGen("../IO/MPI/gen0.dat", &currentGen, &info)) 
+        return INCORRECT_OUTPUT;
+    if(writeGen("../IO/MPI/testWrite.dat", currentGen, info))
+        return INCORRECT_OUTPUT;
     return CORRECT_OUTPUT;
 }
 
@@ -26,14 +52,14 @@ int test_send_receives(){
 int main(){
     //Regular tests
     int returnTester = test_calculateMooreNeighbourdhood();
-    if(returnTester) printf("Error code %d in test_calculateMooreNeighbourdhood()", returnTester);
-    int returnTester = test_readGen();
-    if(returnTester) printf("Error code %d in test_readGen()", returnTester);
-    int returnTester = test_writeGen();
-    if(returnTester) printf("Error code %d in test_writeGen()", returnTester);
+    if(returnTester) printf("Error code %d in test_calculateMooreNeighbourdhood()\n", returnTester);
+    returnTester = test_readGen();
+    if(returnTester) printf("Error code %d in test_readGen()\n", returnTester);
+    returnTester = test_writeGen();
+    if(returnTester) printf("Error code %d in test_writeGen()\n", returnTester);
     //MPI tests
-    int returnTester = test_gen0_propagation();
-    if(returnTester) printf("Error code %d in test_gen0_propagation()", returnTester);  
-    int returnTester = test_send_receives();
-    if(returnTester) printf("Error code %d in test_send_receives()", returnTester);
+    returnTester = test_gen0_propagation();
+    if(returnTester) printf("Error code %d in test_gen0_propagation()\n", returnTester);  
+    returnTester = test_send_receives();
+    if(returnTester) printf("Error code %d in test_send_receives()\n", returnTester);
 }
