@@ -188,14 +188,34 @@ int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info, int genItera
     return 0;
 }
 
-int calculateNumberOfNeighbours(int **MooreNeighbourhoodArray){
+int checkLimit(int value, int min, int max){
+    if(value < min) return 1;
+    else if(value > max) return 1;
+    return 0;
+}
+
+int calculateNumberOfNeighbours(int *MooreNeighbourhoodArray, int xPosition, int yPosition, ConwayGameOfLifeInfo info){
     int n = 0;
-    for (int i = 0; i < 3; i++){
-        for(int j; j < 3; j++){
-            // NOTE: Search for the most efficient way to cycle because of cache 
-            n += MooreNeighbourhoodArray[j][i];
+    int x_currentPosition = 0;
+    int skip = 0;
+    int y_currentPosition = 0;
+    for (int i=-1; i < 2; i++){
+        y_currentPosition = yPosition + i;
+        skip = checkLimit(y_currentPosition, 0, info.h_size-1);
+        if(!skip){
+            for(int j=-1; j < 2; j++){
+                x_currentPosition = xPosition + j;
+                skip = checkLimit(x_currentPosition, 0, info.w_size-1);
+                // NOTE: Search for the most efficient way to cycle because of cache 
+                if(!skip){
+                    n += MooreNeighbourhoodArray[getCurrentGenPosition(y_currentPosition, x_currentPosition)];
+                    //printf("%d ", MooreNeighbourhoodArray[getCurrentGenPosition(y_currentPosition, x_currentPosition)]);
+                }
+            }
+            //printf("\n");
         }
     }
-    n -= MooreNeighbourhoodArray[1][1];
+    n -= MooreNeighbourhoodArray[getCurrentGenPosition(yPosition, xPosition)];
+    //printf("N:%d\n", n);
     return n;
 }

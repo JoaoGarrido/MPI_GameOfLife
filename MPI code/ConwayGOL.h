@@ -37,6 +37,8 @@ int readGen(char *filename, int **array, ConwayGameOfLifeInfo* info);
 
 int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info, int genIterator);
 
-int calculateNumberOfNeighbours(int **MooreNeighbourhoodArray);
+int checkLimit(int value, int min, int max);
+
+int calculateNumberOfNeighbours(int *MooreNeighbourhoodArray, int xPosition, int yPosition, ConwayGameOfLifeInfo info);
 
 #endif
