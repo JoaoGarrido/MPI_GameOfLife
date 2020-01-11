@@ -8,9 +8,10 @@
 
 #define DEFAULT_N_GEN 100
 
-#define getFlatRow(row) row*info.w_size
-#define getCurrentGenPosition(row, column) getFlatRow(row) + column
-#define getRowsBufPosition(processRowNumber, row, column) processRowNumber*(*nRowsOfProcess)*getFlatRow(row) + getCurrentGenPosition(row, column)
+#define mapRow(row) (row)*info.w_size
+#define mapRowForProcess(row_for_proc) (row_for_proc)*info.w_size*info.h_size
+#define getCurrentGenPosition(row, column) mapRow(row) + column
+#define getRowsBufPosition(row_for_proc, row, column) mapRowForProcess(row_for_proc) + getCurrentGenPosition(row, column)
 
 #define ROW process_rank+system_size*row_for_process
 #define getRow(process_rank, row_for_process) process_rank+system_size*row_for_process
@@ -39,6 +40,8 @@ int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info, int genItera
 
 int checkLimit(int value, int min, int max);
 
-int calculateNumberOfNeighbours(int *MooreNeighbourhoodArray, int xPosition, int yPosition, ConwayGameOfLifeInfo info);
+int calculateNumberOfNeighbours(const int *MooreNeighbourhoodArray, const int row, const int xPosition, const ConwayGameOfLifeInfo info);
+
+void calculateNewGen(int *rowsBuf, int* newGenRow, ConwayGameOfLifeInfo info, int currentGenRowNumber);
 
 #endif

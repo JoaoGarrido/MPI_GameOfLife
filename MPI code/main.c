@@ -66,7 +66,7 @@ int main(int argc, char const *argv[]){
     }
     else{
         //Calculate and send every gen
-        for(int i = 1; i <= info.n_gen; i++){
+        for(int gen_iterator = 1; gen_iterator <= info.n_gen; gen_iterator++){
             //For every row that received initially
             for(row_for_process = 0;  row_for_process < nRowsOfProcess; row_for_process++){
                 //Send row to other processes
@@ -74,16 +74,18 @@ int main(int argc, char const *argv[]){
                 //Receive rows from other processes
                 receiveRows(process_rank, system_size, row_for_process, &(rowsBuf[getRowsBufPosition(row_for_process, 0, 0)]), &(rowsBuf[getRowsBufPosition(row_for_process, 2, 0)]), info);
                 //Calculate new generation
-
+                calculateNewGen(&rowsBuf[mapRowForProcess(row_for_process)], info);
                 //Send to process 0 the next gen row
                 MPI_Send(
-                    &(rowsBuf[getRowsBufPosition(row_for_process,1,0)]),
+                    &(rowsBuf[mapRowForProcess(row_for_process)]),
                     info.w_size,
                     MPI_INT,
                     0,
                     ROW,
                     MPI_COMM_WORLD
                 );
+                //Wait for broadcast sync flag from process 0
+            
             }
         }
         free(rowsBuf);

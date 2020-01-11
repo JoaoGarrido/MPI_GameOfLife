@@ -194,28 +194,38 @@ int checkLimit(int value, int min, int max){
     return 0;
 }
 
-int calculateNumberOfNeighbours(int *MooreNeighbourhoodArray, int xPosition, int yPosition, ConwayGameOfLifeInfo info){
+int calculateNumberOfNeighbours(const int *MooreNeighbourhoodArray, const int row, const int xPosition, const ConwayGameOfLifeInfo info){
     int n = 0;
-    int x_currentPosition = 0;
-    int skip = 0;
-    int y_currentPosition = 0;
     for (int i=-1; i < 2; i++){
-        y_currentPosition = yPosition + i;
-        skip = checkLimit(y_currentPosition, 0, info.h_size-1);
-        if(!skip){
-            for(int j=-1; j < 2; j++){
-                x_currentPosition = xPosition + j;
-                skip = checkLimit(x_currentPosition, 0, info.w_size-1);
-                // NOTE: Search for the most efficient way to cycle because of cache 
-                if(!skip){
-                    n += MooreNeighbourhoodArray[getCurrentGenPosition(y_currentPosition, x_currentPosition)];
-                    //printf("%d ", MooreNeighbourhoodArray[getCurrentGenPosition(y_currentPosition, x_currentPosition)]);
-                }
+        for(int j=-1; j < 2; j++){
+            if(!checkLimit(row+i, 0, info.h_size-1) && !checkLimit(xPosition+j, 0, info.w_size-1) ){
+                /*
+                printf("i:%d j:%d mapped:%d value:%d\n", 
+                    i, j,
+                    getCurrentGenPosition(1+i, xPosition+j),
+                    MooreNeighbourhoodArray[getCurrentGenPosition(1+i, xPosition+j)]
+                );
+                */
+                n += MooreNeighbourhoodArray[getCurrentGenPosition(1+i, xPosition+j)];
+                
             }
-            //printf("\n");
         }
     }
-    n -= MooreNeighbourhoodArray[getCurrentGenPosition(yPosition, xPosition)];
-    //printf("N:%d\n", n);
+    //printf("%d", MooreNeighbourhoodArray[getCurrentGenPosition(1, xPosition)]);
+    n -= MooreNeighbourhoodArray[getCurrentGenPosition(1, xPosition)];
     return n;
+}
+
+void calculateNewGen(int *rowsBuf, int* newGenRow, ConwayGameOfLifeInfo info, int currentGenRowNumber){
+    int n = 0;
+    for(int j=0; j<info.w_size; j++){
+        n = calculateNumberOfNeighbours(rowsBuf, currentGenRowNumber, j, info);
+        //printf("row:%d column:%d n: %d\n", currentGenRowNumber, j, n);
+        if( ( rowsBuf[getCurrentGenPosition(1, j)] && (n > 1) && (n < 4) ) || (!rowsBuf[getCurrentGenPosition(1, j)] && (n == 3) ) ){
+            newGenRow[j] = 1;
+        }
+        else{
+            newGenRow[j] = 0;
+        }
+    }
 }

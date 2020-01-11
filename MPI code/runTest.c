@@ -17,41 +17,81 @@ int test_checktLimit(){
 }
 
 int test_calculateMooreNeighbourdhood(){
-    int array[] = {
-        1, 0, 1, 1,
+    int rowsBuf[] = {
         0, 1, 0, 0,
         1, 1, 0, 1,
         0, 1, 1, 1
     };
+    int n_neighbourds_normal[] = {
+        3, 4, 6, 2
+    };
+    int n_neighbourds_min[] = {
+        2, 3, 5, 2
+    };
+    int n_neighbourds_max[] = {
+        2, 2, 3, 0
+    };    
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 4, .w_size = 4};
+    int n = 0;
+    //printf("%d %d\n", info.h_size, info.w_size);
+    for(int j=0; j<info.w_size; j++){
+        n = calculateNumberOfNeighbours(rowsBuf, 1, j, info);
+        if(n != n_neighbourds_normal[j]){
+            //printf("row: normal\ncolumn:%d\nn should be %d instead of %d\n", j, n_neighbourds_normal[j], n);
+            return INCORRECT_OUTPUT;
+        }
+        n = calculateNumberOfNeighbours(rowsBuf, 0, j, info);
+        if(n != n_neighbourds_min[j]){
+            printf("row: min\ncolumn:%d\nn should be %d instead of %d\n", j, n_neighbourds_min[j], n);
+            return INCORRECT_OUTPUT;
+        }
+        n = calculateNumberOfNeighbours(rowsBuf, info.h_size - 1, j, info);
+        if(n != n_neighbourds_max[j]){
+            printf("row: max\ncolumn:%d\nn should be %d instead of %d\n", j, n_neighbourds_max[j], n);
+            return INCORRECT_OUTPUT;
+        }
+    }
+    return CORRECT_OUTPUT;
+}
+
+int test_calculateNewGen(){
+    int array[] = {
+        1, 1, 1, 1, //simulate rowsBuf
+        1, 0, 1, 1,
+        0, 1, 0, 0,
+        1, 1, 0, 1,
+        0, 1, 1, 1,
+        1, 1, 1, 1  //simulate rowsBuf
+    };
     int nextGen[] = {
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0 ,0 ,0
+        1, 1, 1, 1, //simulate rowsBuf
+        1, 1, 1, 1, 
+        1, 1, 1, 1, 
+        1, 1, 1, 1,         
+        1, 1, 1, 1, 
+        1, 1, 1, 1 //simulate rowsBuf
     };
     int nextGenCorrect[] = {
+        1, 1, 1, 1, //simulate rowsBuf
         0, 1, 1, 0,
         0, 0, 0, 1,
         1, 0, 0, 1,
         1, 1, 0, 1,
+        1, 1, 1, 1  //simulate rowsBuf
     };
-    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 4, .w_size = 4};
-    int n = 0;
-    //printf("%d %d\n", info.h_size, info.w_size);
-    for(int i=0; i<info.h_size; i++){
-        for(int j=0; j<info.w_size; j++){
-            n = calculateNumberOfNeighbours(&array, j, i, info);
-            //printf("%d ", n);
-            if( ( array[getCurrentGenPosition(i, j)] && (n > 1) && (n < 4) ) || (!array[getCurrentGenPosition(i, j)] && (n == 3) ) )
-                nextGen[getCurrentGenPosition(i, j)] = 1;
-            //printf("%d ", nextGen[getCurrentGenPosition(i, j)] );
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 4, .w_size = 4};    
+    for(int i = 0; i<(info.w_size); i++){
+        calculateNewGen(&(array[mapRow(i)]), &nextGen[mapRow(i+1)], info, i);
+    }
+    for(int i = 0; i<(info.w_size+2);i++){
+        for (int j = 0; j < info.w_size; j++){
             if(nextGen[getCurrentGenPosition(i, j)] != nextGenCorrect[getCurrentGenPosition(i, j)]){
                 printf("row: %d\ncolumn:%d\n", i, j);
                 return INCORRECT_OUTPUT;
             }
         }
-        //printf("\n");
     }
+  
     return CORRECT_OUTPUT;
 }
 
@@ -98,8 +138,10 @@ int main(){
     //Regular tests
     int returnTester = test_checktLimit();
     if(returnTester) printf("Error code %d in test_checktLimit()\n", returnTester);
-    returnTester = test_calculateMooreNeighbourdhood();
-    if(returnTester) printf("Error code %d in test_calculateMooreNeighbourdhood()\n", returnTester);
+    //returnTester = test_calculateMooreNeighbourdhood();
+    //if(returnTester) printf("Error code %d in test_calculateMooreNeighbourdhood()\n", returnTester);
+    returnTester = test_calculateNewGen();
+    if(returnTester) printf("Error code %d in test_calculateNewGen()\n", returnTester);
     returnTester = test_readGen();
     if(returnTester) printf("Error code %d in test_readGen()\n", returnTester);
     returnTester = test_writeGen();
