@@ -1,43 +1,67 @@
 #include "ConwayGOL.h"
 
-int main(int argc, char const *argv[]){
+int main(int argc, char *argv[]){
+
+    //All process variables
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 0, .w_size = 0};
     int process_rank, system_size;
-    int *currentGen; //2D
-    //int *nextGen; //2D
-    ConwayGameOfLifeInfo info = {DEFAULT_N_GEN};
     int row_for_process = 0;
-
-    //test array
-    int A[4][4] = {
-        {1, 0, 0, 0},
-        {1, 1, 1, 0},
-        {0, 0, 0, 0},
-        {1, 0, 0, 1}
-    };
-    int genA[4][4] = {};
     
-
-
-    MPI_Init(&argc, &argv);
+    //Process == 0 variables
+    int *currentGen; //2d array mapped to 1d
+    int *nextGen; //2d array mapped to 1d
+    
+    //Process != 0 variables
+    int *rowsBuf; //3d array mapped to 1d
+    int *nextGenRow; //1d
+    int nRowsOfProcess; //nRows the current process will have
+    
+    //process != 0 START HERE
+    MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &system_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
-
-    int *nRowsOfProcess;
-    int *rowsBuf;
-
-    //NOTE: Find a smarter way of doing this
+    printf("Process rank:%d\n", process_rank);
+    
     if(!process_rank){
+        //readGen0 and alloc currentGen
         readGen("../IO/gen0.dat", &currentGen, &info);
         if(argc > 1 && argv[1][0] == '-' && argv[1][1] == 'g'){
             info.n_gen = atoi(argv[2]); //DON'T CHANGE info AFTER THIS
         }
-        gen0Propagation(process_rank, system_size, &currentGen, NULL, info);
-    }
-    else{
-        gen0Propagation(process_rank, system_size, &rowsBuf, &nRowsOfProcess, info);
-    }
-    
-    if(!process_rank){
+        //alloc next gen array
+        allocIntegerArray(&nextGen, info.w_size*info.h_size);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if(system_size > info.h_size){
+            printf("Try again with n_cores <= number of rows of file\nSystem size:%d info.h_size:%d\n", system_size, info.h_size);
+            MPI_Finalize();
+            return 1;
+        }
+        //Send info to other processes
+        MPI_Bcast( //info.n_gen
+            &info.n_gen,
+            1,
+            MPI_INT,
+            0,
+            MPI_COMM_WORLD
+        );
+        MPI_Bcast( //info.h_size
+            &info.h_size,
+            1,
+            MPI_INT,
+            0,
+            MPI_COMM_WORLD
+        );
+        MPI_Bcast( //info.w_size
+            &info.w_size,
+            1,
+            MPI_INT,
+            0,
+            MPI_COMM_WORLD
+        );
+        //Sync info
+        MPI_Barrier(MPI_COMM_WORLD);
+        //Send nRowsOfProcess and nRowsOfProcess gen0 rows to each process
+        gen0send(system_size, &currentGen, info);
         //Calculate all the generations 
         for(int gen_iterator = 1; gen_iterator <= info.n_gen; gen_iterator++){
             //calculate process 0 rows
@@ -45,26 +69,46 @@ int main(int argc, char const *argv[]){
                 //Send to other processes the current row
                 sendRows(process_rank, system_size, row_for_process, &currentGen[getCurrentGenPosition(ROW, 0)], info);
                 //NOTE: process 0 already got all the rows of the previous gen, no need to receive anything!
-                //Receive from other processes 
-                receiveRows(process_rank, system_size, row_for_process, &currentGen[getCurrentGenPosition(ROW, 0)], &currentGen[getCurrentGenPosition(ROW, 0)], info);
+                //Calculate new generation
+                // NOTE: if ROW == 0, the address 0 does not correspond to a valid address of the arrays but it should not acess it inside calculateNextGenRow()
+                calculateNextGenRow(&currentGen[mapRow(ROW-1)], &nextGen[mapRow(ROW-1)] , info, ROW);
             }
-            /* SYNC WORK
-            MPI_Bcast(
-                ,
-                1,
-                MPI_INT,
-                0,
-                MPI_COMM_WORLD
+            //Swap currentGen with newGen
+            int *aux = currentGen;
+            currentGen = nextGen;
+            nextGen = aux;
+            //Sync all processes
+            MPI_Barrier(MPI_COMM_WORLD);
+            //Get every row of next gen and join into the array
+            for(int i = 0; i < info.h_size; i++){
+                if(i%system_size == 0){
+                    MPI_Recv(
+                        &currentGen[mapRow(i)],
+                        info.w_size,
+                        MPI_INT,
+                        MPI_ANY_SOURCE,
+                        i,
+                        MPI_COMM_WORLD,
+                        MPI_STATUS_IGNORE
+                    );
+                }
+            }
 
-            );*/
-            //get every row of next gen and join into the array
-            
-            //currentGen = newGen;
             //write to the file the currentGen
             writeGen("../IO/MPI/gen", currentGen, info, gen_iterator);
         }
+        free(currentGen);
+        free(nextGen);
     }
     else{
+        //Test size
+        MPI_Barrier(MPI_COMM_WORLD);
+        //Sync info
+        MPI_Barrier(MPI_COMM_WORLD);
+        //Receive nRowsOfProcess and gen0 rows
+        gen0recv(process_rank, system_size, &rowsBuf, &nRowsOfProcess, info);
+        //Alloc nextGenRow
+        allocIntegerArray(&nextGenRow, info.w_size);
         //Calculate and send every gen
         for(int gen_iterator = 1; gen_iterator <= info.n_gen; gen_iterator++){
             //For every row that received initially
@@ -74,23 +118,25 @@ int main(int argc, char const *argv[]){
                 //Receive rows from other processes
                 receiveRows(process_rank, system_size, row_for_process, &(rowsBuf[getRowsBufPosition(row_for_process, 0, 0)]), &(rowsBuf[getRowsBufPosition(row_for_process, 2, 0)]), info);
                 //Calculate new generation
-                calculateNewGen(&rowsBuf[mapRowForProcess(row_for_process)], info);
+                calculateNextGenRow(&rowsBuf[mapRowForProcess(row_for_process)], nextGenRow, info, ROW);
                 //Send to process 0 the next gen row
                 MPI_Send(
-                    &(rowsBuf[mapRowForProcess(row_for_process)]),
+                    nextGenRow,
                     info.w_size,
                     MPI_INT,
                     0,
                     ROW,
                     MPI_COMM_WORLD
                 );
-                //Wait for broadcast sync flag from process 0
-            
+                //Copy nextGenRow to rowsBuf
+                memcpy(&rowsBuf[getRowsBufPosition(row_for_process, 1, 0)], nextGenRow, info.w_size);
             }
+            //Sync all processes
+            MPI_Barrier(MPI_COMM_WORLD);
         }
+        free(nextGenRow);
         free(rowsBuf);
     }
-
     MPI_Finalize();
     return 0;
 }

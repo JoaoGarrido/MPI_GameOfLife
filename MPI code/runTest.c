@@ -6,6 +6,14 @@
 
 #define CORRECT_OUTPUT 0
 
+int test_allocGenArray(){
+    int *genArray;
+    ConwayGameOfLifeInfo info = {.w_size = 100, .h_size = 100};
+    allocIntegerArray(&genArray, info.w_size*info.h_size);
+    free(genArray);
+    return CORRECT_OUTPUT;
+}
+
 int test_checktLimit(){
     int value = 2;
     if(checkLimit(value, 0, 1) == 0) return INCORRECT_OUTPUT;
@@ -54,7 +62,7 @@ int test_calculateMooreNeighbourdhood(){
     return CORRECT_OUTPUT;
 }
 
-int test_calculateNewGen(){
+int test_calculateNextGenRow(){
     int array[] = {
         1, 1, 1, 1, //simulate rowsBuf
         1, 0, 1, 1,
@@ -81,7 +89,7 @@ int test_calculateNewGen(){
     };
     ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 4, .w_size = 4};    
     for(int i = 0; i<(info.w_size); i++){
-        calculateNewGen(&(array[mapRow(i)]), &nextGen[mapRow(i+1)], info, i);
+        calculateNextGenRow(&(array[mapRow(i)]), &nextGen[mapRow(i+1)], info, i);
     }
     for(int i = 0; i<(info.w_size+2);i++){
         for (int j = 0; j < info.w_size; j++){
@@ -97,7 +105,7 @@ int test_calculateNewGen(){
 
 int test_readGen(){
     int *currentGen;
-    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN};
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 0, .w_size = 0};
     if(readGen("../IO/MPI/gen0.dat", &currentGen, &info)) 
         return INCORRECT_OUTPUT;
     if(info.h_size != 17 || info.w_size != 38)  
@@ -138,10 +146,12 @@ int main(){
     //Regular tests
     int returnTester = test_checktLimit();
     if(returnTester) printf("Error code %d in test_checktLimit()\n", returnTester);
-    //returnTester = test_calculateMooreNeighbourdhood();
-    //if(returnTester) printf("Error code %d in test_calculateMooreNeighbourdhood()\n", returnTester);
-    returnTester = test_calculateNewGen();
-    if(returnTester) printf("Error code %d in test_calculateNewGen()\n", returnTester);
+    returnTester = test_calculateMooreNeighbourdhood();
+    if(returnTester) printf("Error code %d in test_calculateMooreNeighbourdhood()\n", returnTester);
+    returnTester = test_calculateNextGenRow();
+    if(returnTester) printf("Error code %d in test_calculateNextGenRow()\n", returnTester);
+    returnTester = test_allocGenArray();
+    if(returnTester) printf("Error code %d in test_allocGenArray()\n", returnTester);
     returnTester = test_readGen();
     if(returnTester) printf("Error code %d in test_readGen()\n", returnTester);
     returnTester = test_writeGen();

@@ -28,7 +28,11 @@ typedef struct{
     int w_size;
 }ConwayGameOfLifeInfo;
 
-void gen0Propagation(int process_rank, int system_size, int **buf, int *nRowsOfProcess, ConwayGameOfLifeInfo info);
+void allocIntegerArray(int **intArray, long n_elements);
+
+void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info);
+
+void gen0recv(int process_rank, int system_size, int **rowsBuf, int *nRowsOfProcess, ConwayGameOfLifeInfo info);
 
 void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo info);
 
@@ -42,6 +46,6 @@ int checkLimit(int value, int min, int max);
 
 int calculateNumberOfNeighbours(const int *MooreNeighbourhoodArray, const int row, const int xPosition, const ConwayGameOfLifeInfo info);
 
-void calculateNewGen(int *rowsBuf, int* newGenRow, ConwayGameOfLifeInfo info, int currentGenRowNumber);
+void calculateNextGenRow(int *rowsBuf, int* nextGenRow, ConwayGameOfLifeInfo info, int currentGenRowNumber);
 
 #endif
