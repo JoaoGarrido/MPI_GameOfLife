@@ -1,10 +1,28 @@
 #include "ConwayGOL.h"
 
-#define VISUAL_CHECK 0
-
 #define INCORRECT_OUTPUT 1
 
 #define CORRECT_OUTPUT 0
+
+int currentGen0[] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+        0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 
 int test_allocGenArray(){
     int *genArray;
@@ -106,19 +124,21 @@ int test_calculateNextGenRow(){
 int test_readGen(){
     int *currentGen;
     ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 0, .w_size = 0};
-    if(readGen("../IO/MPI/gen0.dat", &currentGen, &info)) 
+    if(readGen("../IO/life.dat", &currentGen, &info)) 
         return INCORRECT_OUTPUT;
     if(info.h_size != 17 || info.w_size != 38)  
         return INCORRECT_OUTPUT;
-    //VisualCheck
-    #if VISUAL_CHECK == 1
+    //int flag = 0; 
     for(int i = 0; i < info.h_size; i++){
         for(int j = 0; j < info.w_size; j++){
-            printf("%d  ", currentGen[getCurrentGenPosition(i, j)]);
+            if(currentGen[getCurrentGenPosition(i, j)] != currentGen0[getCurrentGenPosition(i, j)]){
+                printf("ERROR Row: %d | Column: %d\n", i, j);
+                //flag = 1;
+                return INCORRECT_OUTPUT;
+            }
         }
-        printf("\n");
+        //if(!flag) debug_print("Row %d is correct\n", i);
     }
-    #endif
     free(currentGen);
     return CORRECT_OUTPUT;
 }
@@ -127,14 +147,66 @@ int test_writeGen(){
     int *currentGen;
     ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN};
     //Use readGen to test
-    if(readGen("../IO/MPI/gen0.dat", &currentGen, &info)) 
+    if(readGen("../IO/life.dat", &currentGen, &info)) 
         return INCORRECT_OUTPUT;
-    if(writeGen("../IO/MPI/TEST", currentGen, info, 0))
+    if(writeGen("../IO/TEST", currentGen, info, 0))
         return INCORRECT_OUTPUT;
     return CORRECT_OUTPUT;
 }
 
 int test_gen0_propagation(){
+    int process_rank, system_size;
+    ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 0, .w_size = 0};
+    int *rowsBuf; //3d array mapped to 1d
+    int nRowsOfProcess; //nRows the current process will have    
+    int *currentGen; //2d array mapped to 1d
+    MPI_Init(NULL, NULL);
+    MPI_Comm_size(MPI_COMM_WORLD, &system_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
+    if(!process_rank){
+        //readGen0 and alloc currentGen
+        readGen("../IO/MPI/gen0.dat", &currentGen, &info);
+        //alloc next gen array
+        if(system_size > info.h_size){
+            fprintf(stderr, "Try again with n_cores <= number of rows of file\n");
+            debug_print("System size:%d info.h_size:%d\n", system_size, info.h_size);
+            MPI_Finalize();
+            return INCORRECT_OUTPUT;
+        }
+        //Sync info with other processes
+        infoPropagation(process_rank, &info);
+        //Send nRowsOfProcess and nRowsOfProcess gen0 rows to each process
+        gen0send(system_size, &currentGen, info);
+        //Test check to sync after gen0 send
+        debug_print("Process %d Reached MPI_Barrier 2\n", process_rank);
+        MPI_Barrier(MPI_COMM_WORLD); //2
+        free(currentGen);
+    }
+    else{
+        //Sync info
+        infoPropagation(process_rank, &info);
+        //Receive nRowsOfProcess and gen0 rows
+        gen0recv(process_rank, system_size, &rowsBuf, &nRowsOfProcess, info);
+        //Test check to sync after gen0 receive
+        debug_print("Process %d Reached MPI_Barrier 2\n", process_rank);
+        MPI_Barrier(MPI_COMM_WORLD); //2
+        //Test values received
+        int flag = 0;
+        for(int row_for_process = 0; (ROW) < info.h_size; row_for_process++){
+            for(int i = 0; i < info.w_size; i++){
+                if(rowsBuf[getRowsBufPosition(row_for_process, 1, i)] != currentGen0[getCurrentGenPosition(ROW, i)]){
+                    printf("ERROR Process rank: %d | Row: %d | Column: %d\n", process_rank, ROW, i);
+                    flag = 1; 
+                    return INCORRECT_OUTPUT;
+                }
+            }
+            if(!flag) debug_print("Process rank: %d | Row %d is correct\n", process_rank, ROW);
+            flag = 0;
+        }
+        free(rowsBuf);
+    }
+    MPI_Barrier(MPI_COMM_WORLD); //3
+    MPI_Finalize();
     return CORRECT_OUTPUT;
 }
 

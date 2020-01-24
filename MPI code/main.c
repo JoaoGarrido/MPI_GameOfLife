@@ -1,7 +1,5 @@
 #include "ConwayGOL.h"
 
-#define DEBUG 1
-
 int main(int argc, char *argv[]){
 
     //All process variables
@@ -38,31 +36,8 @@ int main(int argc, char *argv[]){
             MPI_Finalize();
             return 1;
         }
-        //Send info to other processes
-        MPI_Bcast( //info.n_gen
-            &info.n_gen,
-            1,
-            MPI_INT,
-            0,
-            MPI_COMM_WORLD
-        );
-        MPI_Bcast( //info.h_size
-            &info.h_size,
-            1,
-            MPI_INT,
-            0,
-            MPI_COMM_WORLD
-        );
-        MPI_Bcast( //info.w_size
-            &info.w_size,
-            1,
-            MPI_INT,
-            0,
-            MPI_COMM_WORLD
-        );
-        //Sync info: Test without it later
-        MPI_Barrier(MPI_COMM_WORLD); //1
-        debug_print("Process %d Reached MPI_Barrier 1\n", process_rank);
+        //Sync info with other processes
+        infoPropagation(process_rank, &info);
         //Send nRowsOfProcess and nRowsOfProcess gen0 rows to each process
         gen0send(system_size, &currentGen, info);
         //Test check to sync after gen0 send
@@ -108,39 +83,7 @@ int main(int argc, char *argv[]){
     }
     else{
         //Sync info
-        debug_print("Process %d Reached MPI_Barrier 1\n", process_rank);
-        //Receive info from process 0
-        MPI_Bcast( //info.n_gen
-            &info.n_gen,
-            1,
-            MPI_INT,
-            0,
-            MPI_COMM_WORLD
-        );
-        MPI_Bcast( //info.h_size
-            &info.h_size,
-            1,
-            MPI_INT,
-            0,
-            MPI_COMM_WORLD
-        );
-        MPI_Bcast( //info.w_size
-            &info.w_size,
-            1,
-            MPI_INT,
-            0,
-            MPI_COMM_WORLD
-        );
-        //
-        MPI_Barrier(MPI_COMM_WORLD); //1 Make sure the variable were received: Test without it later
-        debug_print("info.w_size: %d | info.h_size: %d | n_gen: %d\n", info.w_size, info.h_size, info.n_gen);
-        //Check if the Bcast variables were received correctly
-        if(!info.w_size || !info.h_size || !info.n_gen){
-            fprintf(stderr, "MPI_Bcast couldn't reach the other processes\n");
-            debug_print("System size:%d info.h_size:%d\n", system_size, info.h_size);
-            MPI_Finalize();
-            return 1;
-        }
+        infoPropagation(process_rank, &info);
         //Receive nRowsOfProcess and gen0 rows
         gen0recv(process_rank, system_size, &rowsBuf, &nRowsOfProcess, info);
         //Test check to sync after gen0 receive
@@ -153,13 +96,26 @@ int main(int argc, char *argv[]){
             //For every row that received initially
             for(row_for_process = 0;  row_for_process < nRowsOfProcess; row_for_process++){
                 //Send row to other processes
-                sendRows(process_rank, system_size, row_for_process, &(rowsBuf[getRowsBufPosition(row_for_process, 1, 0)]), info);
+                sendRows(
+                    process_rank, 
+                    system_size, 
+                    row_for_process, 
+                    &(rowsBuf[getRowsBufPosition(row_for_process, 1, 0)]), 
+                    info
+                );
                 //Receive rows from other processes
-                receiveRows(process_rank, system_size, row_for_process, &(rowsBuf[getRowsBufPosition(row_for_process, 0, 0)]), &(rowsBuf[getRowsBufPosition(row_for_process, 2, 0)]), info);
+                receiveRows(
+                    process_rank, 
+                    system_size, 
+                    row_for_process, 
+                    &(rowsBuf[getRowsBufPosition(row_for_process, 0, 0)]), 
+                    &(rowsBuf[getRowsBufPosition(row_for_process, 2, 0)]), 
+                    info
+                );
                 //Calculate new generation
                 calculateNextGenRow(&rowsBuf[mapRowForProcess(row_for_process)], nextGenRow, info, ROW);
                 //Send to process 0 the next gen row
-                MPI_Ssend(
+                MPI_Send(
                     nextGenRow,
                     info.w_size,
                     MPI_INT,
@@ -176,6 +132,8 @@ int main(int argc, char *argv[]){
         free(nextGenRow);
         free(rowsBuf);
     }
+    //To make sure all buffers were freed before ending the program
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     return 0;
 }

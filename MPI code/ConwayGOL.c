@@ -8,6 +8,42 @@ void allocIntegerArray(int **intArray, long n_elements){
     }
 }
 
+int infoPropagation(int process_rank, ConwayGameOfLifeInfo *info){
+    //Receive info from process 0
+    MPI_Bcast( //info.n_gen
+        &(*info).n_gen,
+        1,
+        MPI_INT,
+        0,
+        MPI_COMM_WORLD
+    );
+    MPI_Bcast( //info.h_size
+        &(*info).h_size,
+        1,
+        MPI_INT,
+        0,
+        MPI_COMM_WORLD
+    );
+    MPI_Bcast( //info.w_size
+        &(*info).w_size,
+        1,
+        MPI_INT,
+        0,
+        MPI_COMM_WORLD
+    );
+    //Make sure the variable were received: Test without it later
+    debug_print("Process %d Reached MPI_Barrier 1\n", process_rank);
+    MPI_Barrier(MPI_COMM_WORLD); //1 
+    debug_print("info.w_size: %d | info.h_size: %d | n_gen: %d\n", (*info).w_size, (*info).h_size, (*info).n_gen);
+    //Check if the Bcast variables were received correctly
+    if(!(*info).w_size || !(*info).h_size || !(*info).n_gen){
+        fprintf(stderr, "MPI_Bcast couldn't reach the other processes\n");
+        MPI_Finalize();
+        return 1;
+    }
+    return 0;
+}
+
 void gen0recv(int process_rank, int system_size, int **rowsBuf, int *nRowsOfProcess, ConwayGameOfLifeInfo info){
     int row_for_process = 0;
     //Receive number of rows that will process
@@ -20,6 +56,7 @@ void gen0recv(int process_rank, int system_size, int **rowsBuf, int *nRowsOfProc
         MPI_COMM_WORLD,
         MPI_STATUS_IGNORE
     );
+    debug_print("Process_rank: %d | nRowsOfProcess: %d\n", process_rank, *nRowsOfProcess);
     //Alloc rowsBuf
     allocIntegerArray(rowsBuf, (*nRowsOfProcess)*3*info.w_size);
     //Receive every gen0 rows that will process
@@ -33,34 +70,41 @@ void gen0recv(int process_rank, int system_size, int **rowsBuf, int *nRowsOfProc
             MPI_COMM_WORLD,
             MPI_STATUS_IGNORE
         );
+        debug_print("Process rank: %d | Row %d received\n", process_rank, ROW);
     }
 }
 
 void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info){
     int row_for_process = 0;
+    int nRowsPerProcess = 0;
+    debug_print("Process rank: %d | Entered gen0send\n", 0);
     for(int processes_iterator = 1; processes_iterator < system_size; processes_iterator++){
-        // Scatter is an option too but needs to pre-process the array 
-        // so the rows each process will take are sequential
-        for(row_for_process = 0; GEN_0_ROW < info.h_size; row_for_process++){
-            MPI_Ssend(
-                &(*buf)[GEN_0_ROW],
-                info.w_size,
-                MPI_INT,
-                processes_iterator,
-                GEN_0_ROW, //SPECIAL TAG
-                MPI_COMM_WORLD
-            );
-        }
+        //debug_print("Process 0 sending data to process %d\n", processes_iterator);
+        nRowsPerProcess = info.h_size/system_size + (processes_iterator < ( info.h_size%system_size ) );
         //Send nRows per process
-        //NOTE: MAYBE row_for_process--;
         MPI_Ssend(
-            &row_for_process, 
+            &nRowsPerProcess, 
             1,
             MPI_INT,
             processes_iterator,
             GEN_0_N_ROWS_TAG, //SPECIAL TAG
             MPI_COMM_WORLD
         );
+        debug_print("Process rank: 0 | nRowsOfProcess %d sent to process: %d\n", row_for_process, processes_iterator);
+        // Scatter is an option too but needs to pre-process the array 
+        // so the rows each process will take are sequential
+        for(row_for_process = 0; GEN_0_ROW < info.h_size; row_for_process++){
+            //debug_print("Process 0 sending row %d to process %d\n", GEN_0_ROW, processes_iterator);
+            MPI_Ssend(
+                &(*buf)[getCurrentGenPosition(GEN_0_ROW, 0)],
+                info.w_size,
+                MPI_INT,
+                processes_iterator,
+                GEN_0_ROW, //SPECIAL TAG
+                MPI_COMM_WORLD
+            );
+            debug_print("Row %d sent to process %d\n", GEN_0_ROW, processes_iterator);
+        }
     }
 }
 
@@ -185,7 +229,7 @@ int writeGen(char *filename, int *array, ConwayGameOfLifeInfo info, int genItera
     FILE *f = fopen(writeBuf, "w");
     memset(writeBuf, 0, bufLenght);
     //write file
-     for(int i = 0; i < info.h_size; i++){
+    for(int i = 0; i < info.h_size; i++){
         memset(writeBuf, 0, bufLenght);
         for(int j = 0; j < (info.w_size-1); j++){
             sprintf(tokenBuf, "%d   ", array[getCurrentGenPosition(i, j)]);

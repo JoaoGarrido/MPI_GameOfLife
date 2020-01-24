@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define DEBUG 0
+
 #define debug_print(fmt, ...) \
             do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
 
@@ -14,14 +16,15 @@
 #define mapRow(row) (row)*info.w_size
 #define mapRowForProcess(row_for_proc) (row_for_proc)*info.w_size*info.h_size
 #define getCurrentGenPosition(row, column) mapRow(row) + column
-#define getRowsBufPosition(row_for_proc, row, column) mapRowForProcess(row_for_proc) + getCurrentGenPosition(row, column)
+#define getRowsBufPosition(row_for_proc, row, column) ((row_for_proc)*3*info.w_size) + getCurrentGenPosition(row, column)
+
 
 #define ROW process_rank+system_size*row_for_process
 #define getRow(process_rank, row_for_process) process_rank+system_size*row_for_process
 
 #define GEN_0_ROW processes_iterator+system_size*row_for_process
-#define GEN_0_TAG 0x7FFFFFFF
-#define GEN_0_N_ROWS_TAG 0x7FFFFFFE
+#define GEN_0_TAG 9998
+#define GEN_0_N_ROWS_TAG 9999
 
 #define THIS_GEN_WORK_DONE 0x7FFFFFFD
 
@@ -32,6 +35,8 @@ typedef struct{
 }ConwayGameOfLifeInfo;
 
 void allocIntegerArray(int **intArray, long n_elements);
+
+int infoPropagation(int process_rank, ConwayGameOfLifeInfo *info);
 
 void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info);
 
