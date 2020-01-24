@@ -42,7 +42,7 @@ void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info){
         // Scatter is an option too but needs to pre-process the array 
         // so the rows each process will take are sequential
         for(row_for_process = 0; GEN_0_ROW < info.h_size; row_for_process++){
-            MPI_Send(
+            MPI_Ssend(
                 &(*buf)[GEN_0_ROW],
                 info.w_size,
                 MPI_INT,
@@ -53,7 +53,7 @@ void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info){
         }
         //Send nRows per process
         //NOTE: MAYBE row_for_process--;
-        MPI_Send(
+        MPI_Ssend(
             &row_for_process, 
             1,
             MPI_INT,
@@ -120,7 +120,7 @@ void sendRows(int process_rank, int system_size, int row_for_process, int* curre
     }
     //ABOVE
     if(ROW){
-        MPI_Send(
+        MPI_Ssend(
             currentRow,
             info.w_size,
             MPI_INT,
@@ -131,7 +131,7 @@ void sendRows(int process_rank, int system_size, int row_for_process, int* curre
     }
     //BELOW
     if(ROW >= (info.h_size - 1) ){ //If not the last row, sends to next process
-        MPI_Send(
+        MPI_Ssend(
             currentRow,
             info.w_size,
             MPI_INT,
