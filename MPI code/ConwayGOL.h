@@ -6,21 +6,21 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define debug_print(fmt, ...) \
             do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
 
-#define DEFAULT_N_GEN 100
+#define DEFAULT_N_GEN 1
 
 #define mapRow(row) (row)*info.w_size
-#define mapRowForProcess(row_for_proc) (row_for_proc)*info.w_size*info.h_size
-#define getCurrentGenPosition(row, column) mapRow(row) + column
-#define getRowsBufPosition(row_for_proc, row, column) ((row_for_proc)*3*info.w_size) + getCurrentGenPosition(row, column)
+#define mapRowForProcess(row_for_proc) (row_for_proc)*info.w_size*3
+#define getCurrentGenPosition(row, column) mapRow(row) + (column)
+#define getRowsBufPosition(row_for_proc, row, column) mapRowForProcess(row_for_proc) + getCurrentGenPosition(row, column)
 
 
 #define ROW process_rank+system_size*row_for_process
-#define getRow(process_rank, row_for_process) process_rank+system_size*row_for_process
+#define getRow(proc_rank, row_for_proc) (proc_rank)+system_size*(row_for_proc)
 
 #define GEN_0_ROW processes_iterator+system_size*row_for_process
 #define GEN_0_TAG 9998
@@ -42,7 +42,7 @@ void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info);
 
 void gen0recv(int process_rank, int system_size, int **rowsBuf, int *nRowsOfProcess, ConwayGameOfLifeInfo info);
 
-void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo info);
+void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, MPI_Request *aboveRequest, int* belowRowBuf, MPI_Request *belowRequest, ConwayGameOfLifeInfo info);
 
 void sendRows(int process_rank, int system_size, int row_for_process, int* currentRow, ConwayGameOfLifeInfo info);
 

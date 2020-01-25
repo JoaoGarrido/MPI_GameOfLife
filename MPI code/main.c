@@ -45,6 +45,7 @@ int main(int argc, char *argv[]){
         MPI_Barrier(MPI_COMM_WORLD); //2
         //Calculate all the generations 
         for(int gen_iterator = 1; gen_iterator <= info.n_gen; gen_iterator++){
+            debug_print("Process rank: %d | Gen iteration %d\n", process_rank, gen_iterator);
             //calculate process 0 rows
             for(int row_for_process = 0;  ROW < info.h_size; row_for_process++){
                 //Send to other processes the current row
@@ -53,16 +54,23 @@ int main(int argc, char *argv[]){
                 //Calculate new generation
                 // NOTE: if ROW == 0, the address 0 does not correspond to a valid address of the arrays but it should not acess it inside calculateNextGenRow()
                 calculateNextGenRow(&currentGen[mapRow(ROW-1)], &nextGen[mapRow(ROW-1)] , info, ROW);
+                debug_print("Process rank: %d | Calculated generation\n", process_rank);
             }
             //Swap currentGen with newGen
+            debug_print("Process rank: %d | CurrentGen address: %p\n", process_rank, currentGen);
+            debug_print("Process rank: %d | NextGen address: %p\n", process_rank, nextGen);
             int *aux = currentGen;
             currentGen = nextGen;
             nextGen = aux;
+            debug_print("Process rank: %d | CurrentGen address: %p\n", process_rank, currentGen);
+            debug_print("Process rank: %d | NextGen address: %p\n", process_rank, nextGen);
             //Sync all processes
-            MPI_Barrier(MPI_COMM_WORLD);
+            debug_print("Process %d Reached MPI_Barrier 3\n", process_rank);
+            MPI_Barrier(MPI_COMM_WORLD); //3
+            debug_print("Process %d Passed MPI_Barrier 3\n", process_rank);
             //Get every row of next gen and join into the array
             for(int i = 0; i < info.h_size; i++){
-                if(i%system_size == 0){
+                if(i%system_size != 0){
                     MPI_Recv(
                         &currentGen[mapRow(i)],
                         info.w_size,
@@ -74,9 +82,10 @@ int main(int argc, char *argv[]){
                     );
                 }
             }
-
             //write to the file the currentGen
+            debug_print("Process %d | Received every row of gen %d | Writing to file...\n", process_rank, gen_iterator);
             writeGen("../IO/MPI/gen", currentGen, info, gen_iterator);
+            debug_print("Process %d | Wrote gen %d to file\n", process_rank, gen_iterator);
         }
         free(currentGen);
         free(nextGen);
@@ -92,9 +101,14 @@ int main(int argc, char *argv[]){
         //Alloc nextGenRow
         allocIntegerArray(&nextGenRow, info.w_size);
         //Calculate and send every gen
+        MPI_Request aboveRequest;
+        MPI_Request belowRequest;
+        MPI_Request req;
         for(int gen_iterator = 1; gen_iterator <= info.n_gen; gen_iterator++){
+            debug_print("Process rank: %d | Gen iteration %d\n", process_rank, gen_iterator);
             //For every row that received initially
             for(row_for_process = 0;  row_for_process < nRowsOfProcess; row_for_process++){
+                //debug_print("Process Rank: %d | Sent\n", process_rank);
                 //Send row to other processes
                 sendRows(
                     process_rank, 
@@ -108,26 +122,35 @@ int main(int argc, char *argv[]){
                     process_rank, 
                     system_size, 
                     row_for_process, 
-                    &(rowsBuf[getRowsBufPosition(row_for_process, 0, 0)]), 
+                    &(rowsBuf[getRowsBufPosition(row_for_process, 0, 0)]),
+                    &aboveRequest,
                     &(rowsBuf[getRowsBufPosition(row_for_process, 2, 0)]), 
+                    &belowRequest,
                     info
                 );
+                //Wait for receiveing the desired rows
+                MPI_Wait(&aboveRequest, MPI_STATUS_IGNORE);
+                MPI_Wait(&belowRequest, MPI_STATUS_IGNORE);
                 //Calculate new generation
                 calculateNextGenRow(&rowsBuf[mapRowForProcess(row_for_process)], nextGenRow, info, ROW);
+                debug_print("Process Rank: %d | Calculated next gen\n", process_rank);
                 //Send to process 0 the next gen row
-                MPI_Send(
+                MPI_Isend(
                     nextGenRow,
                     info.w_size,
                     MPI_INT,
                     0,
                     ROW,
-                    MPI_COMM_WORLD
+                    MPI_COMM_WORLD,
+                    &req
                 );
+                MPI_Request_free(&req);
                 //Copy nextGenRow to rowsBuf
                 memcpy(&rowsBuf[getRowsBufPosition(row_for_process, 1, 0)], nextGenRow, info.w_size);
             }
             //Sync all processes
-            MPI_Barrier(MPI_COMM_WORLD);
+            debug_print("Process %d Reached MPI_Barrier 3\n", process_rank);
+            MPI_Barrier(MPI_COMM_WORLD); //3
         }
         free(nextGenRow);
         free(rowsBuf);

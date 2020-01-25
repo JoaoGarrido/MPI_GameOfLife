@@ -38,7 +38,6 @@ int infoPropagation(int process_rank, ConwayGameOfLifeInfo *info){
     //Check if the Bcast variables were received correctly
     if(!(*info).w_size || !(*info).h_size || !(*info).n_gen){
         fprintf(stderr, "MPI_Bcast couldn't reach the other processes\n");
-        MPI_Finalize();
         return 1;
     }
     return 0;
@@ -108,7 +107,7 @@ void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info){
     }
 }
 
-void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, int* belowRowBuf, ConwayGameOfLifeInfo info){
+void receiveRows(int process_rank, int system_size, int row_for_process, int* aboveRowBuf, MPI_Request *aboveRequest, int* belowRowBuf, MPI_Request *belowRequest, ConwayGameOfLifeInfo info){
     int process_recv[2];
     /*
         [0] -> receive from process responsible from row above
@@ -124,31 +123,34 @@ void receiveRows(int process_rank, int system_size, int row_for_process, int* ab
     }
     //UP
     if(ROW){ //If not row 0, receive from row above
-        MPI_Recv(
+        MPI_Irecv(
             aboveRowBuf,
             info.w_size,
             MPI_INT,
             process_recv[0], 
-            getRow(process_recv[0], row_for_process),
+            ROW-1,
             MPI_COMM_WORLD,
-            MPI_STATUS_IGNORE
+            aboveRequest
         );
+        debug_print("Process rank: %d | Received row %d from process %d\n", process_rank, ROW-1, process_recv[0]);
     }
     //DOWN
-    if(ROW >= (info.h_size - 1) ){ //If not the last row, receive from row below
-        MPI_Recv(
+    if((ROW) < (info.h_size - 1) ){ //If not the last row, receive from row below
+        MPI_Irecv(
             belowRowBuf,
             info.w_size,
             MPI_INT,
             process_recv[1], 
-            getRow(process_recv[1], row_for_process),
+            ROW+1,
             MPI_COMM_WORLD,
-            MPI_STATUS_IGNORE
+            belowRequest
         );
+        debug_print("Process rank: %d | Received row %d from process %d\n", process_rank, ROW+1, process_recv[1]);
     }
 }
 
 void sendRows(int process_rank, int system_size, int row_for_process, int* currentRow, ConwayGameOfLifeInfo info){
+    MPI_Request req;
     int process_send[2];
     /*
         [0] -> send to process responsible for row above
@@ -162,27 +164,34 @@ void sendRows(int process_rank, int system_size, int row_for_process, int* curre
         process_send[0] = process_rank-1;
         process_send[1] = (process_rank+1)%system_size;
     }
-    //ABOVE
-    if(ROW){
-        MPI_Ssend(
+    //If the process below or above is process 0, no need to send because he already has the row
+    //If row 0 send only to process responsible for row below
+    if((ROW) && process_send[0] != 0){
+        MPI_Isend(
             currentRow,
             info.w_size,
             MPI_INT,
             process_send[0], 
             ROW, 
-            MPI_COMM_WORLD
+            MPI_COMM_WORLD,
+            &req
         );
+        MPI_Request_free(&req);
+        debug_print("Process rank: %d | Sent below row %d to process %d\n", process_rank, ROW, process_send[0]);
     }
-    //BELOW
-    if(ROW >= (info.h_size - 1) ){ //If not the last row, sends to next process
-        MPI_Ssend(
+    //If last row send only to process responsible for row above
+    if((ROW) < (info.h_size - 1) && process_send[1] != 0){ //If not the last row or the process is 0, sends to next process
+        MPI_Isend(
             currentRow,
             info.w_size,
             MPI_INT,
             process_send[1],
             ROW,
-            MPI_COMM_WORLD
+            MPI_COMM_WORLD,
+            &req
         );
+        MPI_Request_free(&req);
+        debug_print("Process rank: %d | Sent above row %d to process %d\n", process_rank, ROW, process_send[1]);
     }
 }
 
