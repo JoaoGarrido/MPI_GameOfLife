@@ -52,8 +52,8 @@ int main(int argc, char *argv[]){
                 sendRows(process_rank, system_size, row_for_process, &currentGen[getCurrentGenPosition(ROW, 0)], info);
                 //NOTE: process 0 already got all the rows of the previous gen, no need to receive anything!
                 //Calculate new generation
-                // NOTE: if ROW == 0, the address 0 does not correspond to a valid address of the arrays but it should not acess it inside calculateNextGenRow()
-                calculateNextGenRow(&currentGen[mapRow(ROW-1)], &nextGen[mapRow(ROW-1)] , info, ROW);
+                // NOTE: if ROW == 0, the address 0 does not correspond to a valid address of the arrays but it should not access it inside calculateNextGenRow()
+                calculateNextGenRow(&currentGen[mapRow(ROW-1)], &nextGen[mapRow(ROW)] , info, ROW);
                 debug_print("Process rank: %d | Calculated generation\n", process_rank);
             }
             //Swap currentGen with newGen
@@ -87,8 +87,10 @@ int main(int argc, char *argv[]){
             writeGen("../IO/MPI/gen", currentGen, info, gen_iterator);
             debug_print("Process %d | Wrote gen %d to file\n", process_rank, gen_iterator);
         }
-        free(currentGen);
+        debug_print("Process rank: %d | NextGen address: %p\n", process_rank, nextGen);
         free(nextGen);
+        debug_print("Process rank: %d | CurrentGen address: %p\n", process_rank, currentGen);
+        free(currentGen);
     }
     else{
         //Sync info

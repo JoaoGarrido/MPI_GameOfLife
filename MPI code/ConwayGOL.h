@@ -11,7 +11,7 @@
 #define debug_print(fmt, ...) \
             do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
 
-#define DEFAULT_N_GEN 1
+#define DEFAULT_N_GEN 100
 
 #define mapRow(row) (row)*info.w_size
 #define mapRowForProcess(row_for_proc) (row_for_proc)*info.w_size*3

@@ -2,7 +2,7 @@
 
 void allocIntegerArray(int **intArray, long n_elements){
     *intArray = malloc(sizeof(int) * n_elements);
-    if(intArray == NULL){
+    if(*intArray == NULL){
         printf("Failed to allocate nextGen array. Exiting...\n");
         exit(0);
     }
