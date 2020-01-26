@@ -1,5 +1,1 @@
-*.dat
 *.out
-!/IO/life.dat
-!/IO/GoldenGen/gen0.dat
-!/IO/MPI/gen0.dat

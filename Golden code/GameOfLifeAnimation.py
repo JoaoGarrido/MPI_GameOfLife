@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+
 def readGen(path, genNumber):
     f = open(path + str(genNumber) + ".dat", "r")
     if genNumber == 0:
@@ -24,6 +25,7 @@ def plotAnimation(path, n, savePath):
     plt.show()
 
 def main():
+    NUM_GEN = 100
     plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../IO/Animations/ConwayGameOfLife_Golden.mp4")
     #plotAnimation("../IO/MPI/gen", NUM_GEN, "../IO/Animations/ConwayGameOfLife_MPI.mp4")
 
