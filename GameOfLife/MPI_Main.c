@@ -150,7 +150,7 @@ int main(int argc, char *argv[]){
                 );
                 MPI_Request_free(&req);
                 //Copy nextGenRow to rowsBuf
-                memcpy(&rowsBuf[getRowsBufPosition(row_for_process, 1, 0)], nextGenRow, info.w_size);
+                memcpy(&rowsBuf[getRowsBufPosition(row_for_process, 1, 0)], nextGenRow, sizeof(int)*info.w_size);
             }
             //Sync all processes
             debug_print("Process %d Reached MPI_Barrier 3\n", process_rank);
