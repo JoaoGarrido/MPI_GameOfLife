@@ -2,6 +2,7 @@
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "files.associations": {
-        "conwaygol.h": "c"
+        "conwaygol.h": "c",
+        "game_of_life.h": "c"
     }
 }
