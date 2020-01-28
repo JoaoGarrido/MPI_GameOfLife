@@ -5,21 +5,21 @@ NUM_GEN = 101
 
 def updateGen(currentGen):
     ySize, xSize = currentGen.shape
-    nextGen = np.zeros((ySize, xSize), dtype = np.uint8)
+    nextGen = np.zeros((ySize, xSize), dtype = np.int)
     #iterate over every cell
     #NOTE: OUTPUT CHECKED. Seems correct!
     for y in range(ySize):
         for x in range(xSize):
-            number_of_neighboors_alive = 0        
-            #calculate number of neighboors alive of the current cell
+            number_of_neighbors_alive = 0        
+            #calculate number of neighbors alive of the current cell
             for x_aux in range(x-1,x+2):
                 for y_aux in range(y-1, y+2):
                     if x_aux >= 0 and y_aux >= 0:
                         if x_aux < xSize and y_aux < ySize:
-                            number_of_neighboors_alive += currentGen[y_aux, x_aux]
-            number_of_neighboors_alive -= currentGen[y, x]
+                            number_of_neighbors_alive += currentGen[y_aux, x_aux]
+            number_of_neighbors_alive -= currentGen[y, x]
             #create next generation 
-            if (currentGen[y, x]) and (number_of_neighboors_alive > 1) and (number_of_neighboors_alive < 4) or (not currentGen[y, x]) and (number_of_neighboors_alive == 3):
+            if (currentGen[y, x]) and (number_of_neighbors_alive > 1) and (number_of_neighbors_alive < 4) or (not currentGen[y, x]) and (number_of_neighbors_alive == 3):
                 nextGen[y, x] = 1
     return nextGen
 
@@ -35,7 +35,7 @@ def main():
     for i in range(1, NUM_GEN):
         currentGen = updateGen(currentGen)
         writeGen(currentGen, i)
-    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../IO/Animations/GoldenAnimation.mp4")
+    plotAnimation("../IO/GoldenGen/gen", NUM_GEN, "../IO/Animations/ConwayGameOfLife_Golden.mp4")
 
 if __name__ == "__main__":
     main()
