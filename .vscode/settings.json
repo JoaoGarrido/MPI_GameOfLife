@@ -3,6 +3,7 @@
     "python.linting.enabled": true,
     "files.associations": {
         "conwaygol.h": "c",
-        "game_of_life.h": "c"
+        "game_of_life.h": "c",
+        "mpi_communication.h": "c"
     }
 }

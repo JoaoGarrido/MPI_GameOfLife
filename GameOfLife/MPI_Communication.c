@@ -23,10 +23,12 @@ int infoPropagation(int process_rank, ConwayGameOfLifeInfo *info){
         0,
         MPI_COMM_WORLD
     );
-    //Make sure the variable were received: Test without it later
-    debug_print("Process %d Reached MPI_Barrier 1\n", process_rank);
-    MPI_Barrier(MPI_COMM_WORLD); //1 
-    debug_print("info.w_size: %d | info.h_size: %d | n_gen: %d\n", (*info).w_size, (*info).h_size, (*info).n_gen);
+    /*
+    //Make sure the variable were received: Test without it later -> Worked fine without this barrier because MPI_Bcast blocks until the barrier is received on the buffer
+    debug_print("Process %d Reached MPI_Barrier %d\n", process_rank, ++MPI_BarrierNumber);
+    MPI_Barrier(MPI_COMM_WORLD); //0
+    */
+    debug_print("Process rank: %d | info.w_size: %d | info.h_size: %d | n_gen: %d\n", process_rank, (*info).w_size, (*info).h_size, (*info).n_gen);
     //Check if the Bcast variables were received correctly
     if(!(*info).w_size || !(*info).h_size || !(*info).n_gen){
         fprintf(stderr, "MPI_Bcast couldn't reach the other processes\n");
@@ -84,16 +86,19 @@ void gen0send(int system_size, int **buf, ConwayGameOfLifeInfo info){
         debug_print("Process rank: 0 | nRowsOfProcess %d sent to process: %d\n", row_for_process, processes_iterator);
         // Scatter is an option too but needs to pre-process the array 
         // so the rows each process will take are sequential
+        MPI_Request req;
         for(row_for_process = 0; GEN_0_ROW < info.h_size; row_for_process++){
             //debug_print("Process 0 sending row %d to process %d\n", GEN_0_ROW, processes_iterator);
-            MPI_Ssend(
+            MPI_Isend(
                 &(*buf)[getCurrentGenPosition(GEN_0_ROW, 0)],
                 info.w_size,
                 MPI_INT,
                 processes_iterator,
                 GEN_0_ROW, //SPECIAL TAG
-                MPI_COMM_WORLD
+                MPI_COMM_WORLD,
+                &req
             );
+            MPI_Request_free(&req);
             debug_print("Row %d sent to process %d\n", GEN_0_ROW, processes_iterator);
         }
     }

@@ -8,6 +8,7 @@ int main(int argc, char *argv[]){
     ConwayGameOfLifeInfo info = {.n_gen = DEFAULT_N_GEN, .h_size = 0, .w_size = 0};
     int process_rank, system_size;
     int row_for_process = 0;
+    int MPI_BarrierNumber = 0;
 
     //Process == 0 variables
     int *currentGen; //2d array mapped to 1d
@@ -43,8 +44,8 @@ int main(int argc, char *argv[]){
         //Send nRowsOfProcess and nRowsOfProcess gen0 rows to each process
         gen0send(system_size, &currentGen, info);
         //Test check to sync after gen0 send
-        debug_print("Process %d Reached MPI_Barrier 2\n", process_rank);
-        MPI_Barrier(MPI_COMM_WORLD); //2
+        debug_print("Process %d Reached MPI_Barrier %d\n", process_rank, ++MPI_BarrierNumber);
+        MPI_Barrier(MPI_COMM_WORLD);
         //Calculate all the generations 
         for(int gen_iterator = 1; gen_iterator <= info.n_gen; gen_iterator++){
             debug_print("Process rank: %d | Gen iteration %d\n", process_rank, gen_iterator);
@@ -67,9 +68,9 @@ int main(int argc, char *argv[]){
             debug_print("Process rank: %d | CurrentGen address: %p\n", process_rank, currentGen);
             debug_print("Process rank: %d | NextGen address: %p\n", process_rank, nextGen);
             //Sync all processes
-            debug_print("Process %d Reached MPI_Barrier 3\n", process_rank);
-            MPI_Barrier(MPI_COMM_WORLD); //3
-            debug_print("Process %d Passed MPI_Barrier 3\n", process_rank);
+            debug_print("Process %d Reached MPI_Barrier %d\n", process_rank, ++MPI_BarrierNumber);
+            MPI_Barrier(MPI_COMM_WORLD);
+            debug_print("Process %d Passed MPI_Barrier %d\n", process_rank, MPI_BarrierNumber);
             //Get every row of next gen and join into the array
             for(int i = 0; i < info.h_size; i++){
                 if(i%system_size != 0){
@@ -100,8 +101,8 @@ int main(int argc, char *argv[]){
         //Receive nRowsOfProcess and gen0 rows
         gen0recv(process_rank, system_size, &rowsBuf, &nRowsOfProcess, info);
         //Test check to sync after gen0 receive
-        debug_print("Process %d Reached MPI_Barrier 2\n", process_rank);
-        MPI_Barrier(MPI_COMM_WORLD); //2
+        debug_print("Process %d Reached MPI_Barrier %d\n", process_rank, ++MPI_BarrierNumber);
+        MPI_Barrier(MPI_COMM_WORLD);
         //Alloc nextGenRow
         allocIntegerArray(&nextGenRow, info.w_size);
         //Calculate and send every gen
@@ -153,7 +154,7 @@ int main(int argc, char *argv[]){
                 memcpy(&rowsBuf[getRowsBufPosition(row_for_process, 1, 0)], nextGenRow, sizeof(int)*info.w_size);
             }
             //Sync all processes
-            debug_print("Process %d Reached MPI_Barrier 3\n", process_rank);
+            debug_print("Process %d Reached MPI_Barrier %d\n", process_rank, ++MPI_BarrierNumber);
             MPI_Barrier(MPI_COMM_WORLD); //3
         }
         free(nextGenRow);
